@@ -1,0 +1,241 @@
+services:
+  tx1:
+    image: ${NEO4J_IMAGE}
+    hostname: tx1
+    user: "${USER_ID}:${GROUP_ID}"
+    restart: unless-stopped
+    networks:
+      neo4j-cluster:
+        aliases:
+          - neo4j-network
+    ports:
+      - "${TX1_HTTP_PORT}:7474"
+      - "${TX1_BOLT_PORT}:7687"
+    volumes:
+      - ./neo4j.conf:/conf/neo4j.conf
+      - ./data/tx1:/data
+      - ./logs/tx1:/logs
+      - ./conf/tx1:/conf
+      - ./import/tx1:/import
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      EXTENDED_CONF: "yes"
+      NEO4J_EDITION: "docker_compose"
+      NEO4J_server_bolt_advertised__address: "${ADVERTISED_HOST}:${TX1_BOLT_PORT}"
+      NEO4J_server_http_advertised__address: "${ADVERTISED_HOST}:${TX1_HTTP_PORT}"
+      NEO4J_initial_server_mode__constraint: "PRIMARY"
+      NEO4J_initial_server_tags: "transactional"
+      NEO4J_initial_dbms_default__primaries__count: "3"
+      NEO4J_initial_dbms_default__secondaries__count: "2"
+      NEO4J_server_memory_heap_initial__size: "${TX_HEAP}"
+      NEO4J_server_memory_heap_max__size: "${TX_HEAP}"
+      NEO4J_server_memory_pagecache_size: "${TX_PAGECACHE}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  tx2:
+    image: ${NEO4J_IMAGE}
+    hostname: tx2
+    user: "${USER_ID}:${GROUP_ID}"
+    restart: unless-stopped
+    networks:
+      neo4j-cluster:
+        aliases:
+          - neo4j-network
+    ports:
+      - "${TX2_HTTP_PORT}:7474"
+      - "${TX2_BOLT_PORT}:7687"
+    volumes:
+      - ./neo4j.conf:/conf/neo4j.conf
+      - ./data/tx2:/data
+      - ./logs/tx2:/logs
+      - ./conf/tx2:/conf
+      - ./import/tx2:/import
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      EXTENDED_CONF: "yes"
+      NEO4J_EDITION: "docker_compose"
+      NEO4J_server_bolt_advertised__address: "${ADVERTISED_HOST}:${TX2_BOLT_PORT}"
+      NEO4J_server_http_advertised__address: "${ADVERTISED_HOST}:${TX2_HTTP_PORT}"
+      NEO4J_initial_server_mode__constraint: "PRIMARY"
+      NEO4J_initial_server_tags: "transactional"
+      NEO4J_initial_dbms_default__primaries__count: "3"
+      NEO4J_initial_dbms_default__secondaries__count: "2"
+      NEO4J_server_memory_heap_initial__size: "${TX_HEAP}"
+      NEO4J_server_memory_heap_max__size: "${TX_HEAP}"
+      NEO4J_server_memory_pagecache_size: "${TX_PAGECACHE}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  tx3:
+    image: ${NEO4J_IMAGE}
+    hostname: tx3
+    user: "${USER_ID}:${GROUP_ID}"
+    restart: unless-stopped
+    networks:
+      neo4j-cluster:
+        aliases:
+          - neo4j-network
+    ports:
+      - "${TX3_HTTP_PORT}:7474"
+      - "${TX3_BOLT_PORT}:7687"
+    volumes:
+      - ./neo4j.conf:/conf/neo4j.conf
+      - ./data/tx3:/data
+      - ./logs/tx3:/logs
+      - ./conf/tx3:/conf
+      - ./import/tx3:/import
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      EXTENDED_CONF: "yes"
+      NEO4J_EDITION: "docker_compose"
+      NEO4J_server_bolt_advertised__address: "${ADVERTISED_HOST}:${TX3_BOLT_PORT}"
+      NEO4J_server_http_advertised__address: "${ADVERTISED_HOST}:${TX3_HTTP_PORT}"
+      NEO4J_initial_server_mode__constraint: "PRIMARY"
+      NEO4J_initial_server_tags: "transactional"
+      NEO4J_initial_dbms_default__primaries__count: "3"
+      NEO4J_initial_dbms_default__secondaries__count: "2"
+      NEO4J_server_memory_heap_initial__size: "${TX_HEAP}"
+      NEO4J_server_memory_heap_max__size: "${TX_HEAP}"
+      NEO4J_server_memory_pagecache_size: "${TX_PAGECACHE}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  analytics1:
+    image: ${NEO4J_IMAGE}
+    hostname: analytics1
+    user: "${USER_ID}:${GROUP_ID}"
+    restart: unless-stopped
+    networks:
+      neo4j-cluster:
+        aliases:
+          - neo4j-network
+    ports:
+      - "${ANALYTICS1_HTTP_PORT}:7474"
+      - "${ANALYTICS1_BOLT_PORT}:7687"
+    volumes:
+      - ./neo4j.conf:/conf/neo4j.conf
+      - ./data/analytics1:/data
+      - ./logs/analytics1:/logs
+      - ./conf/analytics1:/conf
+      - ./import/analytics1:/import
+      - ./plugins/analytics1:/plugins
+      - ./licenses:/licenses:ro
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      EXTENDED_CONF: "yes"
+      NEO4J_EDITION: "docker_compose"
+      NEO4J_server_bolt_advertised__address: "${ADVERTISED_HOST}:${ANALYTICS1_BOLT_PORT}"
+      NEO4J_server_http_advertised__address: "${ADVERTISED_HOST}:${ANALYTICS1_HTTP_PORT}"
+      NEO4J_initial_server_mode__constraint: "SECONDARY"
+      NEO4J_server_cluster_system__database__mode: "SECONDARY"
+      NEO4J_initial_server_tags: "analytics"
+      NEO4J_initial_dbms_default__primaries__count: "3"
+      NEO4J_initial_dbms_default__secondaries__count: "2"
+      NEO4J_server_memory_heap_initial__size: "${ANALYTICS_HEAP}"
+      NEO4J_server_memory_heap_max__size: "${ANALYTICS_HEAP}"
+      NEO4J_server_memory_pagecache_size: "${ANALYTICS_PAGECACHE}"
+      NEO4J_PLUGINS: '["graph-data-science"]'
+      NEO4J_dbms_security_procedures_allowlist: "gds.*"
+      NEO4J_dbms_security_procedures_unrestricted: "gds.*"
+      NEO4J_gds_enterprise_license__file: "${GDS_LICENSE_FILE}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  analytics2:
+    image: ${NEO4J_IMAGE}
+    hostname: analytics2
+    user: "${USER_ID}:${GROUP_ID}"
+    restart: unless-stopped
+    networks:
+      neo4j-cluster:
+        aliases:
+          - neo4j-network
+    ports:
+      - "${ANALYTICS2_HTTP_PORT}:7474"
+      - "${ANALYTICS2_BOLT_PORT}:7687"
+    volumes:
+      - ./neo4j.conf:/conf/neo4j.conf
+      - ./data/analytics2:/data
+      - ./logs/analytics2:/logs
+      - ./conf/analytics2:/conf
+      - ./import/analytics2:/import
+      - ./plugins/analytics2:/plugins
+      - ./licenses:/licenses:ro
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD}"
+      EXTENDED_CONF: "yes"
+      NEO4J_EDITION: "docker_compose"
+      NEO4J_server_bolt_advertised__address: "${ADVERTISED_HOST}:${ANALYTICS2_BOLT_PORT}"
+      NEO4J_server_http_advertised__address: "${ADVERTISED_HOST}:${ANALYTICS2_HTTP_PORT}"
+      NEO4J_initial_server_mode__constraint: "SECONDARY"
+      NEO4J_server_cluster_system__database__mode: "SECONDARY"
+      NEO4J_initial_server_tags: "analytics"
+      NEO4J_initial_dbms_default__primaries__count: "3"
+      NEO4J_initial_dbms_default__secondaries__count: "2"
+      NEO4J_server_memory_heap_initial__size: "${ANALYTICS_HEAP}"
+      NEO4J_server_memory_heap_max__size: "${ANALYTICS_HEAP}"
+      NEO4J_server_memory_pagecache_size: "${ANALYTICS_PAGECACHE}"
+      NEO4J_PLUGINS: '["graph-data-science"]'
+      NEO4J_dbms_security_procedures_allowlist: "gds.*"
+      NEO4J_dbms_security_procedures_unrestricted: "gds.*"
+      NEO4J_gds_enterprise_license__file: "${GDS_LICENSE_FILE}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  cluster-init:
+    image: ${NEO4J_IMAGE}
+    hostname: cluster-init
+    restart: "no"
+    networks:
+      - neo4j-cluster
+    depends_on:
+      tx1:
+        condition: service_healthy
+      tx2:
+        condition: service_healthy
+      tx3:
+        condition: service_healthy
+      analytics1:
+        condition: service_healthy
+      analytics2:
+        condition: service_healthy
+    volumes:
+      - ./bootstrap:/bootstrap:ro
+    environment:
+      NEO4J_PASSWORD: "${NEO4J_PASSWORD}"
+      BOOTSTRAP_TARGET: "bolt://tx1:7687"
+      EXPECTED_SERVER_COUNT: "5"
+      ANALYTICS_SERVER_ADDRESSES: "${ADVERTISED_HOST}:${ANALYTICS1_BOLT_PORT},${ADVERTISED_HOST}:${ANALYTICS2_BOLT_PORT}"
+      DEFAULT_DATABASE_NAME: "neo4j"
+      DEFAULT_DATABASE_TOPOLOGY: "3 PRIMARIES 2 SECONDARIES"
+    entrypoint: ["/bin/bash", "/bootstrap/bootstrap-cluster.sh"]
+
+networks:
+  neo4j-cluster:
+    driver: bridge
