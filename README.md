@@ -1,145 +1,145 @@
 # Neo4j Enterprise Analytics Cluster Lab
 
-Lab ini menyiapkan Neo4j Enterprise cluster di satu host Docker Compose untuk
-mencoba pemisahan transactional workload dan analytics workload.
+This lab runs a Neo4j Enterprise cluster on a single Docker Compose host for
+experimenting with separated transactional and analytics workloads.
 
-Topologi default:
+Default topology:
 
-- 3 transactional node: `tx1`, `tx2`, `tx3`
-- 2 analytics node: `analytics1`, `analytics2`
-- Database `neo4j`: `3 PRIMARIES 2 SECONDARIES`
-- Database `system` pada analytics node dipaksa `SECONDARY`
-- Graph Data Science aktif hanya di analytics node
+- 3 transactional nodes: `tx1`, `tx2`, `tx3`
+- 2 analytics nodes: `analytics1`, `analytics2`
+- `neo4j` database: `3 PRIMARIES 2 SECONDARIES`
+- `system` database on analytics nodes is forced to `SECONDARY`
+- Graph Data Science is enabled only on the analytics nodes
 
-## Struktur Project
+## Project Structure
 
 ```text
 .
-├── docker-compose.yml          # Stack Neo4j cluster
+├── docker-compose.yml          # Neo4j cluster stack
 ├── neo4j.conf                  # Shared cluster config
-├── bootstrap/                  # Script bootstrap topology cluster
-├── conf/                       # Bind mount config per node
-├── import/                     # Folder import per node
+├── bootstrap/                  # Cluster topology bootstrap script
+├── conf/                       # Per-node config bind mounts
+├── import/                     # Per-node import folders
 ├── licenses/                   # Optional GDS Enterprise license
-└── plugins/                    # Runtime plugin directory per analytics node
+└── plugins/                    # Runtime plugin directory for analytics nodes
 ```
 
-Folder `data/`, `logs/`, dan file plugin `.jar` adalah artefak runtime dan tidak
-di-commit ke Git. Neo4j Docker image akan memasang plugin GDS lewat
-`NEO4J_PLUGINS` saat analytics node dijalankan.
+The `data/`, `logs/`, and plugin `.jar` files are runtime artifacts and are not
+committed to Git. The Neo4j Docker image installs the GDS plugin through
+`NEO4J_PLUGINS` when the analytics nodes start.
 
-## Prasyarat
+## Requirements
 
-- Docker dan Docker Compose plugin
-- Neo4j Enterprise image dapat ditarik dari registry
-- Resource host cukup untuk 5 container Neo4j
+- Docker and the Docker Compose plugin
+- Access to pull the Neo4j Enterprise image
+- Enough host resources to run 5 Neo4j containers
 
 ## Setup
 
-Salin contoh environment:
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Sesuaikan nilai penting di `.env`:
+Adjust the important values in `.env`:
 
-- `NEO4J_PASSWORD`: password user `neo4j`
-- `ADVERTISED_HOST`: `localhost` untuk mesin lokal, atau IP/DNS host Docker
-- `USER_ID` dan `GROUP_ID`: UID/GID user host agar bind mount bisa ditulis
-- Port `TX*` dan `ANALYTICS*` jika ada bentrok port
+- `NEO4J_PASSWORD`: password for the `neo4j` user
+- `ADVERTISED_HOST`: `localhost` for a local machine, or the Docker host IP/DNS
+- `USER_ID` and `GROUP_ID`: host UID/GID so bind mounts are writable
+- `TX*` and `ANALYTICS*` ports if there are local port conflicts
 
-Jika belum tahu UID/GID host:
+If you do not know the host UID/GID:
 
 ```bash
 id -u
 id -g
 ```
 
-## Jalankan Cluster
+## Running the Cluster
 
 ```bash
 docker compose up -d
 docker compose logs -f cluster-init
 ```
 
-Jika `cluster-init` selesai dengan pesan berikut, cluster sudah siap:
+The cluster is ready when `cluster-init` finishes with:
 
 ```text
 Analytics cluster bootstrap finished.
 ```
 
-## Endpoint
+## Endpoints
 
 | Role | Browser HTTP | Direct Bolt |
 | --- | --- | --- |
-| Router / writer awal | `http://localhost:17474` | `neo4j://localhost:17687` |
+| Initial router / writer | `http://localhost:17474` | `neo4j://localhost:17687` |
 | Transactional 2 | `http://localhost:17475` | `bolt://localhost:17688` |
 | Transactional 3 | `http://localhost:17476` | `bolt://localhost:17689` |
 | Analytics 1 | `http://localhost:17477` | `bolt://localhost:17690` |
 | Analytics 2 | `http://localhost:17478` | `bolt://localhost:17691` |
 
-Credential default:
+Default credentials:
 
 - Username: `neo4j`
-- Password: nilai `NEO4J_PASSWORD` di `.env`
+- Password: the `NEO4J_PASSWORD` value in `.env`
 
-## Verifikasi Cluster
+## Verifying the Cluster
 
-Masuk ke `tx1` atau Neo4j Browser, lalu jalankan:
+Connect to `tx1` or Neo4j Browser, then run:
 
 ```cypher
 SHOW SERVERS;
 SHOW DATABASE neo4j;
 ```
 
-Server `analytics1` dan `analytics2` seharusnya `Enabled`, dan database `neo4j`
-memakai `3 PRIMARIES 2 SECONDARIES`.
+The `analytics1` and `analytics2` servers should be `Enabled`, and the `neo4j`
+database should use `3 PRIMARIES 2 SECONDARIES`.
 
-## Menggunakan Analytics Node
+## Using the Analytics Nodes
 
-Untuk query GDS, sambungkan client langsung ke analytics node dengan protokol
-`bolt://`, misalnya:
+For GDS queries, connect directly to an analytics node with the `bolt://`
+protocol, for example:
 
 ```bash
 source .env
 cypher-shell -a bolt://localhost:17690 -u neo4j -p "${NEO4J_PASSWORD}"
 ```
 
-Workload analytics sebaiknya dijalankan di server `SECONDARY`.
+Analytics workloads should run on `SECONDARY` servers.
 
-## GDS Enterprise Opsional
+## Optional GDS Enterprise License
 
-Secara default, compose menjalankan plugin GDS di mode Community pada analytics
-node. Jika Anda punya lisensi GDS Enterprise:
+By default, this compose stack runs the GDS plugin in Community mode on the
+analytics nodes. If you have a GDS Enterprise license:
 
-1. Letakkan file lisensi di `./licenses/gds`
-2. Ubah `GDS_LICENSE_FILE=/licenses/gds` di `.env`
-3. Restart analytics node:
+1. Place the license file at `./licenses/gds`
+2. Set `GDS_LICENSE_FILE=/licenses/gds` in `.env`
+3. Recreate the analytics nodes:
 
 ```bash
 docker compose up -d --force-recreate analytics1 analytics2
 ```
 
-## Reset Lab
+## Resetting the Lab
 
-Matikan container tanpa menghapus data:
+Stop the containers without deleting data:
 
 ```bash
 docker compose down
 ```
 
-Hapus state database dan log lokal:
+Delete local database state and logs:
 
 ```bash
 docker compose down
 rm -rf data logs plugins/analytics1/*.jar plugins/analytics2/*.jar
 ```
 
-## Catatan
+## Notes
 
-- Tag image default dipin ke `neo4j:2026.02.3-enterprise`.
-- Jika host bukan mesin lokal, ubah `ADVERTISED_HOST` di `.env` ke DNS/IP host Docker.
-- Untuk workload analytics Cypher berat non-GDS, Anda bisa menambahkan routing
-  policy berbasis tag `analytics` karena kedua analytics node sudah diberi
+- The default image tag is pinned to `neo4j:2026.02.3-enterprise`.
+- If the host is not your local machine, set `ADVERTISED_HOST` in `.env` to the Docker host DNS/IP.
+- For heavy non-GDS analytics Cypher workloads, you can add a routing policy
+  based on the `analytics` tag because both analytics nodes use
   `initial.server.tags=analytics`.
